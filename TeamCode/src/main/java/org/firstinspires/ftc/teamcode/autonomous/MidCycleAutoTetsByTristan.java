@@ -160,7 +160,7 @@ public class MidCycleAutoTetsByTristan extends LinearOpMode {
         Action DriveToIntakeFromInitialDeposit;
         Action DriveToIntake;
         Action DriveToDeposit;
-        Action ParkZone2;
+        Action ParkZone3;
 
 
         //set staring position, unit is inches
@@ -220,8 +220,8 @@ public class MidCycleAutoTetsByTristan extends LinearOpMode {
                 .build();
 
 
-        ParkZone2 = drive.actionBuilder(new Pose2d(55,39,Math.toRadians(125)))
-                .turn(Math.toRadians(-125))
+        ParkZone3 = drive.actionBuilder(new Pose2d(55,39,Math.toRadians(125)))
+                .strafeToLinearHeading(new Vector2d(60,12),Math.toRadians(180))
                 .build();
 
 
@@ -229,7 +229,7 @@ public class MidCycleAutoTetsByTristan extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        Action parkingZone = ParkZone2;
+        Action parkingZone = ParkZone3;
         Lift lift = new Lift();
         Actions.runBlocking(new SequentialAction(
                         lift.initialize(),
