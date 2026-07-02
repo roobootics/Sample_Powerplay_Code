@@ -28,18 +28,7 @@ import java.util.ArrayList;
 
 @Autonomous
 public class MidCycleAutoTetsByTristan extends LinearOpMode {
-    OpenCvCamera camera;
-    AprilTagDetectionPipeline aprilTagDetectionPipeline;
     static final double FEET_PER_METER = 3.28084;
-    double fx = 578.272;
-    double fy = 578.272;
-    double cx = 402.145;
-    double cy = 221.506;
-    double tagsize = 0.166;
-    int leftTag = 17;
-    int middleTag = 18;
-    int rightTag = 19;
-    AprilTagDetection tagOfInterest = null;
     public int target = 0;
     double Kp = 0.01;
     boolean isLiftMoving= false;
@@ -163,25 +152,6 @@ public class MidCycleAutoTetsByTristan extends LinearOpMode {
     }
 
     public void runOpMode() {
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-        aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
-
-        camera.setPipeline(aprilTagDetectionPipeline);
-        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
-            @Override
-            public void onOpened()
-            {
-                camera.startStreaming(800,448, OpenCvCameraRotation.UPRIGHT);
-            }
-
-            @Override
-            public void onError(int errorCode)
-            {
-
-            }
-        });
 
         telemetry.setMsTransmissionInterval(50);
         MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(11, 36, Math.toRadians(0)));
@@ -190,9 +160,7 @@ public class MidCycleAutoTetsByTristan extends LinearOpMode {
         Action DriveToIntakeFromInitialDeposit;
         Action DriveToIntake;
         Action DriveToDeposit;
-        Action ParkZone1;
         Action ParkZone2;
-        Action ParkZone3;
 
 
         //set staring position, unit is inches
@@ -252,119 +220,16 @@ public class MidCycleAutoTetsByTristan extends LinearOpMode {
                 .build();
 
 
-
-
-
-        ParkZone1 = drive.actionBuilder(new Pose2d(55,39,Math.toRadians(125)))
-                .strafeToLinearHeading(new Vector2d(60,60),Math.toRadians(180))
-                .build();
-
         ParkZone2 = drive.actionBuilder(new Pose2d(55,39,Math.toRadians(125)))
                 .turn(Math.toRadians(-125))
                 .build();
 
-        ParkZone3 = drive.actionBuilder(new Pose2d(55,39,Math.toRadians(125)))
-                .strafeToLinearHeading(new Vector2d(60,12),Math.toRadians(180))
-                .build();
-
-        boolean tagFound = false;
 
         waitForStart();
 
         if (isStopRequested()) return;
 
-        while (!tagFound)
-        {
-            ArrayList<AprilTagDetection> currentDetections = aprilTagDetectionPipeline.getLatestDetections();
-
-            if(currentDetections.size() != 0)
-            {
-                tagFound = false;
-
-                for(AprilTagDetection tag : currentDetections)
-                {
-                    if(tag.id == leftTag || tag.id == middleTag || tag.id == rightTag)
-                    {
-                        tagOfInterest = tag;
-                        tagFound = true;
-                        break;
-                    }
-                }
-
-                if(tagFound)
-                {
-                    telemetry.addLine("Tag of interest is in sight!\n\nLocation data:");
-                }
-                else
-                {
-                    telemetry.addLine("Don't see tag of interest :(");
-
-                    if(tagOfInterest == null)
-                    {
-                        telemetry.addLine("(The tag has never been seen)");
-                    }
-                    else
-                    {
-                        telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
-                    }
-                }
-
-            }
-            else
-            {
-                telemetry.addLine("Don't see tag of interest :(");
-
-                if(tagOfInterest == null)
-                {
-                    telemetry.addLine("(The tag has never been seen)");
-                }
-                else
-                {
-                    telemetry.addLine("\nBut we HAVE seen the tag before; last seen at:");
-                }
-
-            }
-
-            telemetry.update();
-            sleep(20);
-        }
-
-
-        /* Update the telemetry */
-        if(tagOfInterest != null)
-        {
-            telemetry.addLine("Tag snapshot:\n");
-            telemetry.update();
-        }
-        else
-        {
-            telemetry.addLine("No tag snapshot available, it was never sighted during the init loop :(");
-            telemetry.update();
-        }
-
-        Action parkingZone = null;
-
-        if(tagOfInterest == null){
-
-            // Runs autonomous and parks in zone 2
-
-            //VIV here 3.141592653
-            // Runs if camera does not detect april tag
-            parkingZone = ParkZone2;
-        }
-        if(tagOfInterest.id == leftTag){
-
-            parkingZone = ParkZone1;
-        }
-        else if (tagOfInterest.id == middleTag){
-
-            parkingZone = ParkZone2;
-        }
-        else if (tagOfInterest.id == rightTag){
-
-            parkingZone = ParkZone3;
-            // Viv did this comment
-        }
+        Action parkingZone = ParkZone2;
         Lift lift = new Lift();
         Actions.runBlocking(new SequentialAction(
                         lift.initialize(),
